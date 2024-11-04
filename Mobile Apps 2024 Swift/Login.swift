@@ -30,16 +30,17 @@ struct Login: View {
                 .textFieldStyle(RoundedBorderTextFieldStyle())
                 .padding(.horizontal)
             
-            Button(action: login) {
-                   Text("Login")
-                        .font(.headline)
-                        .padding()
-                        .frame(maxWidth: .infinity)
-                        .background(Color.blue)
-                        .foregroundColor(.white)
-                        .cornerRadius(10)
-                        .padding(.horizontal)
-            }
+            Button("Login") {
+                Task {
+                    await login()
+                }
+            }.font(.headline)
+                .padding()
+                .frame(maxWidth: .infinity)
+                .background(Color.blue)
+                .foregroundColor(.white)
+                .cornerRadius(10)
+                .padding(.horizontal)
             
             Button(action: {showingSignup = true}) {
                 Text("Signup")
@@ -57,17 +58,18 @@ struct Login: View {
         }
     }
 
-    func login() {
-//        Task {
-//            do {
-//                try await SupabaseManager.shared.client.auth.signIn(email: email, password: password)
-////                if response != nil {
-////                    SignupView()
-////                }
-//            } catch {
-//                errorMessage = error.localizedDescription
-//            }
-//        }
+    func login() async{
+        do {
+            let session = try await SupabaseManager.shared.client.auth.signIn(email: email, password: password)
+            if session != nil {
+                print("works")
+                WindowGroup {
+                    Display()
+                }
+            }
+        } catch {
+            print("Sign-in failed: \(error.localizedDescription)")
+        }
     }
 }
 
