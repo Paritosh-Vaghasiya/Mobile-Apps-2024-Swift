@@ -14,6 +14,8 @@ struct Update: View {
     @State private var city: String = ""
     @State private var errorMessage: String = ""
     @State private var successMessage: String = ""
+    @State private var showingDisplay = false
+    @State private var isUpdated = false
 
     var body: some View {
         VStack {
@@ -33,28 +35,31 @@ struct Update: View {
                 .textFieldStyle(RoundedBorderTextFieldStyle())
                 .padding(.horizontal)
 
-            Button(action: updateProfile) {
-                Text("Update Info")
-                    .font(.headline)
-                    .padding()
-                    .frame(maxWidth: .infinity)
-                    .background(Color.green)
-                    .foregroundColor(.white)
-                    .cornerRadius(10)
-                    .padding(.horizontal)
-            }
+            Button("Update Info") {
+                Task {
+                    await updateProfile(
+                        firstName: firstName,
+                        lastName: lastName,
+                        city: city
+                    )
+                }
+            }.font(.headline)
+                .padding()
+                .frame(maxWidth: .infinity)
+                .background(Color.blue)
+                .foregroundColor(.white)
+                .cornerRadius(10)
+                .padding(.horizontal)
+                .sheet(isPresented: $isUpdated) {
+                    Display()
+                }
 
-            Button(action: {
-                // Navigate back to display view or reset fields
-            }) {
+            Button(action: {showingDisplay = true}) {
                 Text("Display")
-                    .font(.headline)
-                    .padding()
-                    .frame(maxWidth: .infinity)
-                    .background(Color.blue)
-                    .foregroundColor(.white)
-                    .cornerRadius(10)
-                    .padding(.horizontal)
+                    .foregroundColor(.blue)
+            }
+            .sheet(isPresented: $showingDisplay) {
+                Display()
             }
 
             if !errorMessage.isEmpty {
@@ -69,59 +74,59 @@ struct Update: View {
                     .padding()
             }
         }
-        .onAppear(perform: loadSession)
+        .task{
+            await loadSession()
+        }
     }
 
     // Load the session to ensure the user is logged in before updating
-    func loadSession() {
-//        Task {
-//            do {
-//                let session = try await SupabaseManager.shared.client.auth.session
-//                if session == nil {
-//                    errorMessage = "No active session found. Please log in."
-//                }
-//            } catch {
-//                errorMessage = error.localizedDescription
-//            }
-//        }
+    func loadSession() async {
+            do {
+                let session = try await SupabaseManager.shared.client.auth.session
+                if session == nil {
+                    errorMessage = "No active session found."
+                    return
+                }
+            } catch {
+                errorMessage = error.localizedDescription
+            }
     }
 
     // Update the profile information in Supabase
-    func updateProfile() {
-//        Task {
-//            do {
-//                // Ensure there's an active session
-////                guard let userId = try await SupabaseManager.shared.client.auth.session.user.id else {
-////                    errorMessage = "No active session found. Please log in."
-////                    return
-////                }
-//
-//                // Update the user's profile in Supabase
-//                let response = try await SupabaseManager.shared.client
-//                    .database
-//                    .from("Table_2") // Make sure this is the correct table name
-//                    .update([
-//                        "firstName": firstName.isEmpty ? nil : firstName,
-//                        "lastName": lastName.isEmpty ? nil : lastName,
-//                        "city": city.isEmpty ? nil : city
-//                    ])
-//                    .eq("id", value: userId)
-//                    .execute()
-//
-//                // Handle response to check if update was successful
-////                if response {
-////                    successMessage = "Profile updated successfully!"
-////                    errorMessage = ""
-////                } else {
-////                    errorMessage = "Error updating profile: Unknown error"
-////                }
-//            } catch {
-//                errorMessage = error.localizedDescription
-//            }
-//        }
+    func updateProfile(firstName: String, lastName: String, city: String) async {
+            do {
+                // Ensure there's an active session
+                let userId = try await SupabaseManager.shared.client.auth.session.user.id
+                
+                if userId == nil {
+                    errorMessage = "No active session found. Please log in."
+                    return
+                }
+
+                // Update the user's profile in Supabase
+                let response = try await SupabaseManager.shared.client
+                    .from("Table_2") // Make sure this is the correct table name
+                    .update([
+                        "firstName": firstName.isEmpty ? nil : firstName,
+                        "lastName": lastName.isEmpty ? nil : lastName,
+                        "city": city.isEmpty ? nil : city
+                    ])
+                    .eq("id", value: userId)
+                    .execute()
+
+                // Handle response to check if update was successful
+                if response != nil {
+                    successMessage = "Profile updated successfully!"
+                    errorMessage = ""
+                } else {
+                    errorMessage = "Error updating profile: Unknown error"
+                }
+            } catch {
+                errorMessage = error.localizedDescription
+            }
     }
 }
 
-#Preview {
-    Update()
-}
+//#Preview {
+//    Update()
+//}

@@ -14,7 +14,7 @@ struct Login: View {
     @State private var errorMessage: String = ""
     @State private var isSignedIn: Bool = false
     @State private var showingSignup = false
-
+    
     var body: some View {
         VStack {
             Text("Login")
@@ -32,7 +32,7 @@ struct Login: View {
             
             Button("Login") {
                 Task {
-                    await login()
+                    await login(email: email, password: password)
                 }
             }.font(.headline)
                 .padding()
@@ -41,13 +41,16 @@ struct Login: View {
                 .foregroundColor(.white)
                 .cornerRadius(10)
                 .padding(.horizontal)
+                .sheet(isPresented: $isSignedIn) {
+                    Display()
+                }
             
             Button(action: {showingSignup = true}) {
                 Text("Signup")
                     .foregroundColor(.blue)
-                }
-                .sheet(isPresented: $showingSignup) {
-                        Signup()
+            }
+            .sheet(isPresented: $showingSignup) {
+                Signup()
             }
             
             if !errorMessage.isEmpty {
@@ -57,22 +60,15 @@ struct Login: View {
             }
         }
     }
-
-    func login() async{
+    
+    func login(email: String, password: String) async {
         do {
             let session = try await SupabaseManager.shared.client.auth.signIn(email: email, password: password)
             if session != nil {
-                print("works")
-                WindowGroup {
-                    Display()
-                }
+                isSignedIn = true
             }
         } catch {
-            print("Sign-in failed: \(error.localizedDescription)")
+            errorMessage = error.localizedDescription
         }
     }
-}
-
-#Preview {
-    Login()
 }

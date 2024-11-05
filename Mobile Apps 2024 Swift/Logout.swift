@@ -27,9 +27,8 @@ struct Logout: View {
                     .background(Color.blue)
                     .cornerRadius(8)
             }
-            .padding(.horizontal, 40)
-            .navigationDestination(isPresented: $navigateToLogin) {
-                Login() // Navigates to LoginView when navigateToLogin is true
+            .sheet(isPresented: $navigateToLogin) {
+                Login()
             }
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
@@ -38,6 +37,6 @@ struct Logout: View {
 }
 
 
-#Preview {
-    Logout()
-}
+//#Preview {
+//    Logout()
+//}
