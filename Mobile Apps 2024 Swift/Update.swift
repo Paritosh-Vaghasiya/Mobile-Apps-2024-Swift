@@ -121,6 +121,8 @@ struct Update: View {
                 } else {
                     errorMessage = "Error updating profile: Unknown error"
                 }
+                
+                showingDisplay = true
             } catch {
                 errorMessage = error.localizedDescription
             }

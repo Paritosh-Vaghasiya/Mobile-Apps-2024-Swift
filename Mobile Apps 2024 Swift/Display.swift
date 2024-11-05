@@ -75,24 +75,32 @@ struct Display: View {
                 return
             }
             
-            let response = try await SupabaseManager.shared.client
+            let response: [UserProfile] = try await SupabaseManager.shared.client
                 .from("Table_2")
-                .select()
-                .eq("user_id", value: session.user.id)
-                .single()
+                .select("firstName, lastName, city, email")
+                .eq("id", value: session.user.id)
                 .execute()
+                .value
             
-            if let userProfile = response.value as? [String: Any] {
-                firstName = userProfile["firstName"] as? String ?? ""
-                lastName = userProfile["lastName"] as? String ?? ""
-                city = userProfile["city"] as? String ?? ""
-                email = userProfile["email"] as? String ?? ""
+            if let userProfile = response.first {
+                firstName = userProfile.firstName
+                lastName = userProfile.lastName
+                city = userProfile.city
+                email = userProfile.email
             } else {
                 errorMessage = "Profile data not found."
             }
         } catch {
             errorMessage = error.localizedDescription
         }
+    }
+
+    
+    struct UserProfile: Decodable {
+        let firstName: String
+        let lastName: String
+        let city: String
+        let email: String
     }
 
 

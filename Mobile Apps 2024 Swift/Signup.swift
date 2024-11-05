@@ -87,11 +87,11 @@ struct Signup: View {
         do {
             let response = try await SupabaseManager.shared.client.auth.signUp(email: email, password: password)
             
-            let data = [
-                firstName: firstName,
-                lastName: lastName,
-                city: city,
-                email: email
+            let data: [String: String] = [
+                "firstName": firstName,
+                "lastName": lastName,
+                "city": city,
+                "email": email
             ]
             
             try await SupabaseManager.shared.client.from("Table_2").insert(data).execute()
